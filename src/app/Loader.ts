@@ -1,3 +1,5 @@
+import banana from "../assets/symbols/banana.png";
+import bg from "../assets/ui/bg.jpg";
 import { Assets } from "pixi.js";
 
 export async function loadAssets() {
@@ -6,8 +8,8 @@ export async function loadAssets() {
       {
         name: "core",
         assets: {
-          symbol1: "assets/symbols/symbol1.png",
-          bg: "assets/ui/bg.jpg",
+          banana,
+          bg,
         },
       },
     ],
