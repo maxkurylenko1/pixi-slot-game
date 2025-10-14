@@ -2,31 +2,39 @@ import { Application, Container, Ticker } from "pixi.js";
 import { SceneManager } from "./SceneManager";
 
 export class AppShell {
-  public app: Application;
-  public root: Container;
-  public sceneManager: SceneManager;
+  public app!: Application;
+  public root!: Container;
+  public sceneManager!: SceneManager;
 
   constructor() {
-    this.app = new Application();
-    this.root = new Container();
-    this.sceneManager = new SceneManager(this.root);
+    this.init();
+  }
 
-    // добавляем канвас в DOM
+  private async init() {
+    // Инициализация приложения асинхронно
+    this.app = new Application();
+
+    await this.app.init({
+      background: "#000000",
+      resizeTo: window,
+      antialias: true,
+    });
+
+    document.body.style.margin = "0";
+    document.body.style.overflow = "hidden";
     document.body.appendChild(this.app.canvas);
+
+    this.root = new Container();
     this.app.stage.addChild(this.root);
 
-    // настройка канваса
-    this.resize();
-    window.addEventListener("resize", () => this.resize());
+    this.sceneManager = new SceneManager(this.root);
 
-    // FPS overlay
     this.addFPSCounter();
 
-    // запускаем Boot сцену
-    this.sceneManager.changeScene("BootScene");
+    window.addEventListener("resize", () => this.resize());
+    this.resize();
 
-    // запускаем тикер
-    this.app.ticker.add(() => this.update());
+    this.sceneManager.changeScene("BootScene");
   }
 
   private addFPSCounter() {
