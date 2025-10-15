@@ -12,7 +12,7 @@ export class BootScene extends Container {
   }
 
   async init() {
-    const loadingText = new Text("Loading...", { fill: "white" });
+    const loadingText = new Text({ text: "Loading...", style: { fill: "white" } });
     loadingText.anchor.set(0.5);
     this.addChild(loadingText);
 
