@@ -7,18 +7,20 @@ export class AppShell {
   public sceneManager!: SceneManager;
 
   constructor() {
-    this.init();
+    this.start();
   }
 
   private async init() {
-    // Инициализация приложения асинхронно
     this.app = new Application();
 
     await this.app.init({
-      background: "#000000",
-      resizeTo: window,
       antialias: true,
+      resolution: window.devicePixelRatio,
+      backgroundColor: "0x000",
+      // autoDensity: true,
     });
+
+    this.app.start();
 
     document.body.style.margin = "0";
     document.body.style.overflow = "hidden";
@@ -35,6 +37,13 @@ export class AppShell {
     this.resize();
 
     this.sceneManager.changeScene("BootScene");
+    this.update();
+
+    console.log("✅ App initialized and ticker started");
+  }
+
+  private async start() {
+    await this.init();
   }
 
   private addFPSCounter() {
@@ -51,11 +60,23 @@ export class AppShell {
   private resize() {
     const width = window.innerWidth;
     const height = window.innerHeight;
+
+    // Устанавливаем логический размер сцены
     this.app.renderer.resize(width, height);
-    this.root.position.set(width / 2, height / 2);
+
+    // Подгоняем canvas к экрану (без автоDensity)
+    const canvas = this.app.canvas;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+
+    console.log("📐 resize:", width, height, "DPR:", window.devicePixelRatio);
   }
 
   private update() {
-    // update logic if needed
+    this.app.ticker.add(({ deltaTime }) => {
+      if (this.sceneManager.currentScene && "update" in this.sceneManager.currentScene) {
+        (this.sceneManager.currentScene as any).update(deltaTime);
+      }
+    });
   }
 }

@@ -12,15 +12,12 @@ export class BootScene extends Container {
   }
 
   async init() {
-    const loadingText = new Text("Loading...", { fill: "white" });
+    const loadingText = new Text({ text: "Loading...", style: { fill: "white" } });
     loadingText.anchor.set(0.5);
+    this.x = window.innerWidth / 2;
+    this.y = window.innerHeight / 2;
     this.addChild(loadingText);
 
-    await loadAssets();
-
-    // через 1 сек переключаемся на GameScene
-    setTimeout(() => {
-      this.sceneManager.changeScene("GameScene");
-    }, 1000);
+    await loadAssets().then(() => this.sceneManager.changeScene("GameScene"));
   }
 }
