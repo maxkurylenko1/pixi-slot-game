@@ -1,5 +1,3 @@
-import banana from "../assets/symbols/banana.png";
-import bg from "../assets/ui/bg.jpg";
 import { Assets } from "pixi.js";
 
 export async function loadAssets() {
@@ -7,10 +5,16 @@ export async function loadAssets() {
     bundles: [
       {
         name: "core",
-        assets: {
-          banana,
-          bg,
-        },
+        assets: [
+          {
+            alias: "atlas",
+            src: "/assets/symbols/fruits.json",
+          },
+          {
+            alias: "bg",
+            src: "/assets/ui/bg.png",
+          },
+        ],
       },
     ],
   };

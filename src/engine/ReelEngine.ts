@@ -10,7 +10,7 @@ export class ReelEngine extends Container {
 
     const spacing = 130;
     for (let i = 0; i < 5; i++) {
-      const reel = new Reel(textures, 150);
+      const reel = new Reel(textures);
       reel.x = i * spacing;
       this.reels.push(reel);
       this.addChild(reel);
@@ -20,6 +20,7 @@ export class ReelEngine extends Container {
   start() {
     this.isSpinning = true;
     this.reels.forEach((reel) => reel.start());
+    console.log("🎰 start", this.children.length, this.reels.length);
   }
 
   stop() {

@@ -6,7 +6,7 @@ export type SceneName = "BootScene" | "GameScene";
 
 export class SceneManager {
   private root: Container;
-  private currentScene?: Container;
+  public currentScene?: Container;
 
   constructor(root: Container) {
     this.root = root;
