@@ -1,7 +1,6 @@
 import { Container, Assets, Sprite, Graphics, Text } from "pixi.js";
 import { ReelEngine } from "../engine/ReelEngine";
 import { EventBus } from "../app/EventBus";
-import { SceneManager } from "../app/SceneManager";
 
 export class GameScene extends Container {
   private bgLayer!: Container;
@@ -14,7 +13,7 @@ export class GameScene extends Container {
   private readonly reelCount = 5;
   private readonly visibleRows = 3;
   private readonly baseWidth = window.innerWidth;
-  private readonly baseHeight = window.innerHeight;
+  private readonly baseHeight = window.innerHeight - 100;
 
   constructor() {
     super();
@@ -35,7 +34,6 @@ export class GameScene extends Container {
     bg.y = window.innerHeight / 2;
     bg.width = window.innerWidth;
     bg.height = window.innerHeight;
-    // const bg = new Graphics().rect(0, 0, window.innerWidth, window.innerHeight).fill(0x1099bb);
     this.bgLayer.addChild(bg);
 
     // === TEXTURES ===
@@ -65,19 +63,23 @@ export class GameScene extends Container {
     this.reelLayer.addChild(this.reels);
 
     // === BACKGROUND BORDER ===
+    // ИЗМЕНЕНО: используем геттеры для получения реальных размеров
+    const actualWidth = this.reels.getActualWidth();
+    const actualHeight = this.reels.getActualHeight();
+
     const base = new Graphics()
-      .rect(this.reels.x, this.reels.y, this.reels.width, this.reels.height)
+      .rect(this.reels.x, this.reels.y, actualWidth, actualHeight)
       .stroke({ width: 5, color: 0xffcc33 });
     this.reelLayer.addChild(base);
 
     // === DIVIDERS ===
+    // ИСПРАВЛЕНО: используем метод getReelXPosition для точного позиционирования
     for (let i = 1; i < this.reelCount; i++) {
+      const xPos = this.reels.x + this.reels.getReelXPosition(i);
+
       const line = new Graphics()
-        .moveTo(this.reels.x + (i * this.reels.width) / this.reelCount, this.reels.y)
-        .lineTo(
-          this.reels.x + (i * this.reels.width) / this.reelCount,
-          this.reels.y + this.reels.height
-        )
+        .moveTo(xPos, this.reels.y)
+        .lineTo(xPos, this.reels.y + actualHeight)
         .stroke({ width: 4, color: 0xffd24c, alpha: 1 });
       this.reelLayer.addChild(line);
     }
@@ -85,8 +87,8 @@ export class GameScene extends Container {
     // === BUTTONS ===
     this.spinButton = new Graphics()
       .roundRect(0, 0, 160, 80, 20)
-      .fill(0xffd24c) // Золотистый фон кнопки
-      .stroke({ width: 4, color: 0x3b1c00 }); // Тёплая обводка
+      .fill(0xffd24c)
+      .stroke({ width: 4, color: 0x3b1c00 });
     this.spinButton.x = window.innerWidth / 2 - 80;
     this.spinButton.y = window.innerHeight / 2 + 220;
 
@@ -111,7 +113,6 @@ export class GameScene extends Container {
     EventBus.on("spinStop", () => this.onSpinStop());
   }
 
-  // === BUTTON CREATOR ===
   private handleSpin() {
     if (this.isSpinning) {
       EventBus.emit("spinStop", undefined);
@@ -124,7 +125,6 @@ export class GameScene extends Container {
     this.isSpinning = true;
     this.reels.start();
 
-    // === Изменяем кнопку ===
     this.spinText.text = "SPINNING...";
     this.spinButton.tint = 0xcccccc;
     this.spinButton.cursor = "not-allowed";

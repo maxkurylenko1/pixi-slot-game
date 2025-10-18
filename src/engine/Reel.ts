@@ -14,13 +14,23 @@ export class Reel extends Container {
   private symbolWidth: number;
   private symbolHeight: number;
   private visibleRows: number;
+  private horizontalPadding: number; // НОВОЕ: отступ слева/справа от символа
+  private verticalPadding: number; // НОВОЕ: отступ сверху/снизу от символа
 
-  constructor(textures: Texture[], symbolWidth: number, symbolHeight: number, visibleRows: number) {
+  constructor(
+    textures: Texture[],
+    symbolWidth: number,
+    symbolHeight: number,
+    visibleRows: number,
+    horizontalPadding: number = 0, // НОВОЕ: padding по горизонтали
+    verticalPadding: number = 0 // НОВОЕ: padding по вертикали
+  ) {
     super();
     this.textures = textures;
     this.symbolWidth = symbolWidth;
     this.symbolHeight = symbolHeight;
-
+    this.horizontalPadding = horizontalPadding; // НОВОЕ
+    this.verticalPadding = verticalPadding; // НОВОЕ
     this.visibleRows = visibleRows;
     this.createSymbols();
   }
@@ -29,9 +39,15 @@ export class Reel extends Container {
     for (let i = 0; i < this.visibleRows + 1; i++) {
       const texture = this.getRandomTexture();
       const symbol = new Sprite(texture);
-      symbol.width = this.symbolWidth;
-      symbol.height = this.symbolWidth;
-      symbol.y = i * this.symbolHeight;
+
+      // ИЗМЕНЕНО: размер символа теперь меньше на величину padding * 2
+      symbol.width = this.symbolWidth - this.horizontalPadding * 2;
+      symbol.height = this.symbolHeight - this.horizontalPadding * 2;
+
+      // ИЗМЕНЕНО: центрируем символ с учётом padding
+      symbol.x = this.horizontalPadding;
+      symbol.y = i * this.symbolHeight + this.horizontalPadding;
+
       this.addChild(symbol);
       this.symbols.push(symbol);
     }
@@ -72,9 +88,6 @@ export class Reel extends Container {
       }
     }
 
-    // === ЭФФЕКТ РАЗМЫТИЯ ===
-    // this.blurFilter.strength = Math.min(8, this.speed / 6);
-
     // Двигаем символы
     this.offset += this.speed * delta;
 
@@ -87,22 +100,20 @@ export class Reel extends Container {
     }
 
     for (let i = 0; i < this.symbols.length; i++) {
-      this.symbols[i].y = i * this.symbolHeight + this.offset - this.symbolHeight;
+      // ИЗМЕНЕНО: позиция по Y с учётом padding
+      this.symbols[i].y =
+        i * this.symbolHeight + this.offset - this.symbolHeight + this.horizontalPadding;
     }
-
-    // // Bounce движение при остановке
-    // if (this.bounce > 0) {
-    //   this.bounce -= delta * 0.8;
-    //   this.y = -this.symbolHeight + Math.sin(this.bounce * 6) * 8 * (this.bounce / 2);
-    // }
   }
 
   private alignToGrid() {
     const offset = this.offset % this.symbolHeight;
     const correction = offset > this.symbolHeight / 2 ? this.symbolHeight - offset : -offset;
     this.offset += correction;
+
     for (let i = 0; i < this.symbols.length; i++) {
-      this.symbols[i].y = i * this.symbolHeight + this.offset - this.symbolHeight;
+      this.symbols[i].y =
+        i * this.symbolHeight + this.offset - this.symbolHeight + this.horizontalPadding;
     }
   }
 }
