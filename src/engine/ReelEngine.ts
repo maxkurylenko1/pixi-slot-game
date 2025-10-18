@@ -9,7 +9,9 @@ export class ReelEngine extends Container {
   private readonly textures: Texture[];
 
   private symbolSize: number;
-  private spacingRatio: number = 0;
+  private reelSpacing: number = 0; // ИЗМЕНЕНО: spacing в пикселях, а не ratio
+  private horizontalPadding: number = 5;
+  private verticalPadding: number = 0; // НОВОЕ: вертикальный padding
 
   private totalWidth: number;
   private totalHeight: number;
@@ -29,17 +31,20 @@ export class ReelEngine extends Container {
     this.reelCount = reelCount;
     this.visibleRows = visibleRows;
 
-    this.symbolSize = Math.min(
-      baseWidth / (this.reelCount + this.spacingRatio * (this.reelCount - 1)),
-      baseHeight / (this.visibleRows + 1)
-    );
+    // ИСПРАВЛЕНО: сначала вычисляем symbolSize БЕЗ spacing
+    const maxSymbolWidth = baseWidth / this.reelCount;
+    const maxSymbolHeight = baseHeight / (this.visibleRows + 1);
+    this.symbolSize = Math.min(maxSymbolWidth, maxSymbolHeight);
 
-    this.totalWidth = this.reelCount * this.symbolSize + (this.reelCount - 1) * this.spacingRatio;
+    // ИСПРАВЛЕНО: теперь считаем правильные размеры
+    this.totalWidth = this.reelCount * this.symbolSize + (this.reelCount - 1) * this.reelSpacing;
     this.totalHeight = this.visibleRows * this.symbolSize;
 
     const gameSize = document.createElement("div");
     gameSize.appendChild(
-      document.createTextNode(`Game: width - ${this.totalWidth} / height - ${this.totalHeight}`)
+      document.createTextNode(
+        `Game: width - ${this.totalWidth.toFixed(2)} / height - ${this.totalHeight.toFixed(2)}`
+      )
     );
     gameSize.style.cssText =
       "position:fixed;top:100px;left:8px;color:white;background:#0006;padding:4px 8px;font-family:monospace;border-radius:4px";
@@ -51,34 +56,35 @@ export class ReelEngine extends Container {
   }
 
   private createReels() {
-    const spacing = this.symbolSize * this.spacingRatio;
-
     // создаём маску
     const mask = new Graphics().rect(0, 0, this.totalWidth, this.totalHeight).fill(0xffffff);
     this.addChild(mask);
     this.mask = mask;
 
     // создаём каждый рил
-    let reelDividerSpace = 1;
     for (let i = 0; i < this.reelCount; i++) {
-      const reel = new Reel(this.textures, this.symbolSize, this.symbolSize, this.visibleRows);
-      reel.width = this.symbolSize;
-      reel.x = i * (this.symbolSize + spacing);
+      const reel = new Reel(
+        this.textures,
+        this.symbolSize,
+        this.symbolSize,
+        this.visibleRows,
+        this.horizontalPadding,
+        this.verticalPadding
+      );
+
+      // ИСПРАВЛЕНО: позиция рила с учётом spacing
+      reel.x = i * (this.symbolSize + this.reelSpacing);
       reel.y = 0;
 
       const bg = new Sprite(Assets.get("reelBg"));
-      bg.width = this.symbolSize; // залезает чуть за границу spacing
+      bg.width = this.symbolSize;
       bg.height = this.symbolSize * this.visibleRows;
-      bg.x = 0; // чтобы визуально перекрыть щель
+      bg.x = 0;
       bg.y = 0;
-      reel.addChildAt(bg, 0); // под символами
+      reel.addChildAt(bg, 0);
 
       this.reels.push(reel);
       this.addChild(reel);
-
-      if (i < this.reelCount - 1) {
-        reelDividerSpace += 3;
-      }
     }
   }
 
@@ -108,5 +114,27 @@ export class ReelEngine extends Container {
 
   update(delta: number) {
     this.reels.forEach((reel) => reel.update(delta));
+  }
+
+  // Геттеры для правильных размеров
+  getActualWidth(): number {
+    return this.totalWidth;
+  }
+
+  getActualHeight(): number {
+    return this.totalHeight;
+  }
+
+  getReelWidth(): number {
+    return this.symbolSize;
+  }
+
+  getReelSpacing(): number {
+    return this.reelSpacing;
+  }
+
+  // НОВОЕ: получить X-позицию конкретного рила
+  getReelXPosition(reelIndex: number): number {
+    return reelIndex * (this.symbolSize + this.reelSpacing);
   }
 }
