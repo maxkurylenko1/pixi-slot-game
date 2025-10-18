@@ -1,68 +1,108 @@
 import { Sprite, Container, Texture } from "pixi.js";
 
+type ReelState = "idle" | "spinning" | "stopping";
+
 export class Reel extends Container {
   private symbols: Sprite[] = [];
   private readonly textures: Texture[];
-  private readonly symbolHeight: number = 150; // фиксированное расстояние между символами
-  private speed = 6;
-  private isSpinning = false;
-  private positionShift = 0;
+  private speed = 0;
+  private acceleration = 0.6;
+  private deceleration = 1.4;
+  private maxSpeed = 45;
+  private offset = 0;
+  private state: ReelState = "idle";
+  private symbolWidth: number;
+  private symbolHeight: number;
+  private visibleRows: number;
 
-  constructor(textures: Texture[]) {
+  constructor(textures: Texture[], symbolWidth: number, symbolHeight: number, visibleRows: number) {
     super();
     this.textures = textures;
+    this.symbolWidth = symbolWidth;
+    this.symbolHeight = symbolHeight;
+
+    this.visibleRows = visibleRows;
     this.createSymbols();
   }
 
   private createSymbols() {
-    for (let i = 0; i < 3; i++) {
-      const texture = this.textures[Math.floor(Math.random() * this.textures.length)];
+    for (let i = 0; i < this.visibleRows + 1; i++) {
+      const texture = this.getRandomTexture();
       const symbol = new Sprite(texture);
-      symbol.anchor.set(0.5);
-      symbol.scale.set(0.3);
-      symbol.x = 0;
+      symbol.width = this.symbolWidth;
+      symbol.height = this.symbolWidth;
       symbol.y = i * this.symbolHeight;
       this.addChild(symbol);
       this.symbols.push(symbol);
     }
   }
 
+  private getRandomTexture() {
+    return this.textures[Math.floor(Math.random() * this.textures.length)];
+  }
+
   start() {
-    this.isSpinning = true;
-    this.positionShift = 0;
-    this.speed = 6 + Math.random() * 2;
+    if (this.state === "spinning") return;
+    this.state = "spinning";
+    this.speed = this.symbolHeight * 0.4;
   }
 
   stop() {
-    this.isSpinning = false;
+    if (this.state !== "spinning") return;
+    this.state = "stopping";
   }
 
   update(delta: number) {
-    if (isNaN(this.positionShift)) {
-      console.error("❌ positionShift NaN", this.positionShift);
+    if (this.state === "idle") return;
+
+    // Разгон
+    if (this.state === "spinning" && this.speed < this.maxSpeed) {
+      this.speed += this.acceleration * delta;
+      if (this.speed > this.maxSpeed) this.speed = this.maxSpeed;
     }
-    if (!this.isSpinning) return;
 
-    this.positionShift += this.speed * delta;
+    // Замедление
+    if (this.state === "stopping") {
+      this.speed -= this.deceleration * delta;
+      if (this.speed <= 0) {
+        this.speed = 0;
+        this.state = "idle";
+        this.alignToGrid();
+        return;
+      }
+    }
 
-    if (this.positionShift >= this.symbolHeight) {
-      this.positionShift = 0;
+    // === ЭФФЕКТ РАЗМЫТИЯ ===
+    // this.blurFilter.strength = Math.min(8, this.speed / 6);
 
-      const last = this.symbols.pop()!;
-      last.texture = this.textures[Math.floor(Math.random() * this.textures.length)];
-      last.y = -this.symbolHeight;
-      this.symbols.unshift(last);
+    // Двигаем символы
+    this.offset += this.speed * delta;
+
+    if (this.offset >= this.symbolHeight) {
+      this.offset -= this.symbolHeight;
+      const bottom = this.symbols.pop()!;
+      bottom.texture = this.getRandomTexture();
+      bottom.y = this.symbols[0].y - this.symbolHeight;
+      this.symbols.unshift(bottom);
     }
 
     for (let i = 0; i < this.symbols.length; i++) {
-      this.symbols[i].y = i * this.symbolHeight + this.positionShift;
+      this.symbols[i].y = i * this.symbolHeight + this.offset - this.symbolHeight;
     }
 
-    console.log({
-      pos: this.symbols.map((s) => s.y.toFixed(1)),
-      visible: this.symbols.map((s) => s.visible),
-      parent: this.parent?.constructor.name,
-      globalY: this.getGlobalPosition().y.toFixed(1),
-    });
+    // // Bounce движение при остановке
+    // if (this.bounce > 0) {
+    //   this.bounce -= delta * 0.8;
+    //   this.y = -this.symbolHeight + Math.sin(this.bounce * 6) * 8 * (this.bounce / 2);
+    // }
+  }
+
+  private alignToGrid() {
+    const offset = this.offset % this.symbolHeight;
+    const correction = offset > this.symbolHeight / 2 ? this.symbolHeight - offset : -offset;
+    this.offset += correction;
+    for (let i = 0; i < this.symbols.length; i++) {
+      this.symbols[i].y = i * this.symbolHeight + this.offset - this.symbolHeight;
+    }
   }
 }

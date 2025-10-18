@@ -18,6 +18,10 @@ export class BootScene extends Container {
     this.y = window.innerHeight / 2;
     this.addChild(loadingText);
 
-    await loadAssets().then(() => this.sceneManager.changeScene("GameScene"));
+    await loadAssets();
+
+    setTimeout(() => {
+      this.sceneManager.changeScene("GameScene");
+    }, 800); // Small delay to see the loading text
   }
 }

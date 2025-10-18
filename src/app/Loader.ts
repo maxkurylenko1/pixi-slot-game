@@ -14,6 +14,10 @@ export async function loadAssets() {
             alias: "bg",
             src: "/assets/ui/bg.png",
           },
+          {
+            alias: "reelBg",
+            src: "/assets/ui/reelBg.png",
+          },
         ],
       },
     ],

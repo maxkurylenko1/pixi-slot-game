@@ -7,7 +7,7 @@ export class AppShell {
   public sceneManager!: SceneManager;
 
   constructor() {
-    this.start();
+    this.init();
   }
 
   private async init() {
@@ -16,8 +16,9 @@ export class AppShell {
     await this.app.init({
       antialias: true,
       resolution: window.devicePixelRatio,
+      resizeTo: window,
       backgroundColor: "0x000",
-      // autoDensity: true,
+      autoDensity: true,
     });
 
     this.app.start();
@@ -33,8 +34,8 @@ export class AppShell {
 
     this.addFPSCounter();
 
-    window.addEventListener("resize", () => this.resize());
-    this.resize();
+    // window.addEventListener("resize", () => this.resize());
+    // this.resize();
 
     this.sceneManager.changeScene("BootScene");
     this.update();
@@ -42,34 +43,24 @@ export class AppShell {
     console.log("✅ App initialized and ticker started");
   }
 
-  private async start() {
-    await this.init();
-  }
-
   private addFPSCounter() {
     const fpsEl = document.createElement("div");
     fpsEl.style.cssText =
       "position:fixed;top:8px;left:8px;color:white;background:#0006;padding:4px 8px;font-family:monospace;border-radius:4px";
+    const windowSize = document.createElement("div");
+    windowSize.appendChild(
+      document.createTextNode(
+        `Window: width - ${window.innerWidth} / height - ${window.innerHeight}`
+      )
+    );
+    windowSize.style.cssText =
+      "position:fixed;top:50px;left:8px;color:white;background:#0006;padding:4px 8px;font-family:monospace;border-radius:4px";
     document.body.appendChild(fpsEl);
+    document.body.appendChild(windowSize);
 
     this.app.ticker.add(() => {
       fpsEl.textContent = `${Math.round(Ticker.shared.FPS)} FPS`;
     });
-  }
-
-  private resize() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-
-    // Устанавливаем логический размер сцены
-    this.app.renderer.resize(width, height);
-
-    // Подгоняем canvas к экрану (без автоDensity)
-    const canvas = this.app.canvas;
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
-
-    console.log("📐 resize:", width, height, "DPR:", window.devicePixelRatio);
   }
 
   private update() {
