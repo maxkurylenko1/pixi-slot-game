@@ -84,13 +84,12 @@ export class GameScene extends Container {
       this.reelLayer.addChild(line);
     }
 
-    // === BUTTONS ===
     this.spinButton = new Graphics()
       .roundRect(0, 0, 160, 80, 20)
       .fill(0xffd24c)
       .stroke({ width: 4, color: 0x3b1c00 });
     this.spinButton.x = window.innerWidth / 2 - 80;
-    this.spinButton.y = window.innerHeight / 2 + 220;
+    this.spinButton.y = window.innerHeight / 2 + 270;
 
     this.spinText = new Text({
       text: "SPIN",
@@ -108,7 +107,6 @@ export class GameScene extends Container {
     this.spinButton.on("pointerdown", () => this.handleSpin());
     this.uiLayer.addChild(this.spinButton);
 
-    // === EVENTS ===
     EventBus.on("spinStart", () => this.onSpinStart());
     EventBus.on("spinStop", () => this.onSpinStop());
   }
